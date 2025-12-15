@@ -719,16 +719,17 @@
             document.getElementById('dueDateInput').min = today;
         };
 
-        function checkSupabaseConfig() {
-            const config = localStorage.getItem('supabaseConfig');
-            if (config) {
-                const { url, key } = JSON.parse(config);
-                initSupabase(url, key);
-            } else {
-                document.getElementById('setupNotice').classList.add('show');
-                document.getElementById('addBtn').disabled = true;
-            }
-        }
+function checkSupabaseConfig() {
+    // DEINE SUPABASE DATEN HIER EINTRAGEN:
+    const SUPABASE_URL = 'https://jpwtynswjxsquypqfakw.supabase.co';  // ← HIER DEINE URL
+    const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Impwd3R5bnN3anhzcXV5cHFmYWt3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjU3NDI1MTUsImV4cCI6MjA4MTMxODUxNX0.ldCOGW6p3NPsX31Lqn41pPh3boNV2TwNUOffWEA-LgM';          // ← HIER DEIN KEY
+    
+    // Automatische Verbindung
+    initSupabase(SUPABASE_URL, SUPABASE_KEY);
+    
+    // Setup-Fenster ausblenden
+    document.getElementById('setupNotice').style.display = 'none';
+}
 
         function saveSupabaseConfig() {
             const url = document.getElementById('supabaseUrl').value.trim();
