@@ -1,0 +1,1056 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Intelligente Aufgabenverwaltung mit Cloud-Synchronisation">
+    <meta name="theme-color" content="#667eea">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="Aufgaben">
+    <link rel="apple-touch-icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='0.9em' font-size='90'>📝</text></svg>">
+    <link rel="manifest" href="manifest.json">
+    <title>Aufgaben Manager - Cloud</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .container {
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            max-width: 600px;
+            width: 100%;
+            padding: 40px;
+        }
+
+        h1 {
+            color: #333;
+            margin-bottom: 30px;
+            text-align: center;
+            font-size: 2em;
+        }
+
+        .setup-notice {
+            background: #fff3cd;
+            border: 2px solid #ffc107;
+            border-radius: 10px;
+            padding: 20px;
+            margin-bottom: 20px;
+            display: none;
+        }
+
+        .setup-notice.show {
+            display: block;
+        }
+
+        .setup-notice h3 {
+            color: #856404;
+            margin-bottom: 10px;
+        }
+
+        .setup-notice p {
+            color: #856404;
+            font-size: 14px;
+            margin-bottom: 10px;
+        }
+
+        .setup-notice input {
+            width: 100%;
+            padding: 10px;
+            margin-bottom: 10px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            font-family: monospace;
+            font-size: 12px;
+        }
+
+        .setup-notice button {
+            width: 100%;
+        }
+
+        .sync-status {
+            text-align: center;
+            padding: 10px;
+            margin-bottom: 20px;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 500;
+        }
+
+        .sync-status.connected {
+            background: #d4edda;
+            color: #155724;
+        }
+
+        .sync-status.error {
+            background: #f8d7da;
+            color: #721c24;
+        }
+
+        .sync-status.syncing {
+            background: #cce5ff;
+            color: #004085;
+        }
+
+        .input-container {
+            margin-bottom: 15px;
+        }
+
+        input[type="text"] {
+            width: 100%;
+            padding: 12px 15px;
+            border: 2px solid #e0e0e0;
+            border-radius: 10px;
+            font-size: 16px;
+            transition: all 0.3s ease;
+        }
+
+        input[type="text"]:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+
+        .task-options {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+            margin-bottom: 15px;
+        }
+
+        .option-group {
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+        }
+
+        .option-group label {
+            font-size: 12px;
+            color: #666;
+            font-weight: 600;
+        }
+
+        select, input[type="date"] {
+            padding: 10px 12px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            font-size: 14px;
+            background: white;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        select:focus, input[type="date"]:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+
+        .add-btn {
+            width: 100%;
+            padding: 12px 20px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 10px;
+            font-size: 15px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+            margin-bottom: 20px;
+        }
+
+        .add-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+        }
+
+        .add-btn:active {
+            transform: translateY(0);
+        }
+
+        .add-btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .search-container {
+            margin-bottom: 15px;
+        }
+
+        #searchInput {
+            width: 100%;
+        }
+
+        button {
+            padding: 12px 20px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 10px;
+            font-size: 15px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+            white-space: nowrap;
+        }
+
+        button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+        }
+
+        button:active {
+            transform: translateY(0);
+        }
+
+        .filter-buttons {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 15px;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+
+        .filter-btn {
+            padding: 10px 20px;
+            background: white;
+            border: 2px solid #e0e0e0;
+            color: #666;
+            border-radius: 8px;
+            font-size: 14px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .filter-btn.active {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border-color: transparent;
+        }
+
+        .category-filter {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 15px;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+
+        .cat-btn {
+            padding: 8px 16px;
+            background: white;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            font-size: 18px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .cat-btn.active {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border-color: transparent;
+            transform: scale(1.1);
+        }
+
+        .sort-buttons {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 20px;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+
+        .sort-btn {
+            padding: 8px 15px;
+            background: #f8f9fa;
+            border: 1px solid #dee2e6;
+            color: #495057;
+            border-radius: 6px;
+            font-size: 13px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .sort-btn:hover {
+            background: #e9ecef;
+            transform: translateY(0);
+            box-shadow: none;
+        }
+
+        .task-list {
+            list-style: none;
+        }
+
+        .task-item {
+            background: #f8f9fa;
+            padding: 15px;
+            margin-bottom: 10px;
+            border-radius: 10px;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            transition: all 0.3s ease;
+            animation: slideIn 0.3s ease;
+            border-left: 4px solid transparent;
+        }
+
+        .task-item.priority-hoch {
+            border-left-color: #ff4757;
+        }
+
+        .task-item.priority-mittel {
+            border-left-color: #ffa502;
+        }
+
+        .task-item.priority-niedrig {
+            border-left-color: #2ed573;
+        }
+
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateY(-10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .task-item:hover {
+            background: #e9ecef;
+            transform: translateX(5px);
+        }
+
+        .task-item.completed {
+            opacity: 0.6;
+        }
+
+        .task-item.completed .task-text {
+            text-decoration: line-through;
+            color: #999;
+        }
+
+        .task-main {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .task-meta {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+            font-size: 12px;
+            margin-left: 36px;
+        }
+
+        .task-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            padding: 4px 10px;
+            border-radius: 12px;
+            background: #e9ecef;
+            color: #495057;
+            font-weight: 500;
+        }
+
+        .task-badge.overdue {
+            background: #ffe0e0;
+            color: #ff4757;
+        }
+
+        .task-badge.due-soon {
+            background: #fff4e0;
+            color: #ffa502;
+        }
+
+        .checkbox {
+            width: 24px;
+            height: 24px;
+            border: 2px solid #667eea;
+            border-radius: 6px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.3s ease;
+            flex-shrink: 0;
+        }
+
+        .checkbox.checked {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        }
+
+        .checkbox.checked::after {
+            content: '✓';
+            color: white;
+            font-weight: bold;
+            font-size: 16px;
+        }
+
+        .task-text {
+            flex: 1;
+            font-size: 16px;
+            color: #333;
+        }
+
+        .delete-btn {
+            padding: 8px 15px;
+            background: #ff4757;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            font-size: 14px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .delete-btn:hover {
+            background: #ff3838;
+            transform: scale(1.05);
+        }
+
+        .stats {
+            margin-top: 30px;
+            padding: 20px;
+            background: #f8f9fa;
+            border-radius: 10px;
+            display: flex;
+            justify-content: space-around;
+            text-align: center;
+        }
+
+        .stat-item {
+            flex: 1;
+        }
+
+        .stat-number {
+            font-size: 24px;
+            font-weight: bold;
+            color: #667eea;
+        }
+
+        .stat-label {
+            font-size: 12px;
+            color: #666;
+            margin-top: 5px;
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 40px;
+            color: #999;
+        }
+
+        .empty-state svg {
+            width: 80px;
+            height: 80px;
+            margin-bottom: 20px;
+            opacity: 0.3;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 40px;
+            color: #667eea;
+        }
+
+        .loading::after {
+            content: '...';
+            animation: dots 1.5s steps(4, end) infinite;
+        }
+
+        @keyframes dots {
+            0%, 20% { content: '.'; }
+            40% { content: '..'; }
+            60%, 100% { content: '...'; }
+        }
+
+        /* Mobile Optimierung */
+        @media (max-width: 480px) {
+            .container {
+                padding: 20px;
+            }
+
+            h1 {
+                font-size: 1.5em;
+                margin-bottom: 20px;
+            }
+
+            .task-options {
+                grid-template-columns: 1fr;
+                gap: 10px;
+            }
+
+            .option-group label {
+                font-size: 11px;
+            }
+
+            select, input[type="date"] {
+                padding: 8px 10px;
+                font-size: 13px;
+            }
+
+            input[type="text"] {
+                padding: 10px 12px;
+                font-size: 16px;
+            }
+
+            .add-btn {
+                padding: 10px 16px;
+                font-size: 14px;
+            }
+
+            .filter-buttons, .category-filter, .sort-buttons {
+                gap: 6px;
+            }
+
+            .filter-btn {
+                padding: 8px 14px;
+                font-size: 13px;
+            }
+
+            .cat-btn {
+                padding: 6px 12px;
+                font-size: 16px;
+            }
+
+            .sort-btn {
+                padding: 6px 12px;
+                font-size: 12px;
+            }
+
+            .task-item {
+                padding: 12px;
+            }
+
+            .task-text {
+                font-size: 15px;
+            }
+
+            .task-meta {
+                font-size: 11px;
+                margin-left: 32px;
+            }
+
+            .task-badge {
+                padding: 3px 8px;
+                font-size: 11px;
+            }
+
+            .delete-btn {
+                padding: 6px 12px;
+                font-size: 13px;
+            }
+
+            .stats {
+                padding: 15px;
+                margin-top: 20px;
+            }
+
+            .stat-number {
+                font-size: 20px;
+            }
+
+            .stat-label {
+                font-size: 11px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>📝 Aufgaben Manager</h1>
+
+        <!-- Setup Notice -->
+        <div class="setup-notice" id="setupNotice">
+            <h3>⚙️ Supabase Setup erforderlich</h3>
+            <p>Bitte gib deine Supabase Projekt-Daten ein:</p>
+            <input type="text" id="supabaseUrl" placeholder="Supabase Project URL (https://xxx.supabase.co)">
+            <input type="text" id="supabaseKey" placeholder="Supabase Anon/Public Key">
+            <button onclick="saveSupabaseConfig()">Verbinden</button>
+            <p style="margin-top: 15px; font-size: 12px;">
+                Diese Daten findest du in deinem Supabase Projekt unter:<br>
+                <strong>Settings → API → Project URL & anon/public key</strong>
+            </p>
+        </div>
+
+        <!-- Sync Status -->
+        <div class="sync-status" id="syncStatus" style="display: none;"></div>
+        
+        <!-- Reset Button -->
+        <div style="text-align: center; margin-bottom: 15px;">
+            <button onclick="resetConfig()" style="background: #ff6b6b; padding: 8px 16px; font-size: 13px;">
+                🔄 Verbindung zurücksetzen
+            </button>
+        </div>
+        
+        <div class="input-container">
+            <input 
+                type="text" 
+                id="taskInput" 
+                placeholder="Neue Aufgabe eingeben..."
+                onkeypress="if(event.key === 'Enter') addTask()"
+            >
+        </div>
+
+        <div class="task-options">
+            <div class="option-group">
+                <label>Kategorie</label>
+                <select id="categorySelect">
+                    <option value="persönlich">👤 Persönlich</option>
+                    <option value="arbeit">💼 Arbeit</option>
+                    <option value="einkaufen">🛒 Einkaufen</option>
+                    <option value="haushalt">🏠 Haushalt</option>
+                    <option value="gesundheit">💪 Gesundheit</option>
+                    <option value="sonstiges">📌 Sonstiges</option>
+                </select>
+            </div>
+
+            <div class="option-group">
+                <label>Priorität</label>
+                <select id="prioritySelect">
+                    <option value="niedrig">🟢 Niedrig</option>
+                    <option value="mittel" selected>🟡 Mittel</option>
+                    <option value="hoch">🔴 Hoch</option>
+                </select>
+            </div>
+
+            <div class="option-group">
+                <label>Fällig am</label>
+                <input type="date" id="dueDateInput">
+            </div>
+        </div>
+
+        <button class="add-btn" id="addBtn" onclick="addTask()">➕ Aufgabe hinzufügen</button>
+
+        <div class="search-container">
+            <input 
+                type="text" 
+                id="searchInput" 
+                placeholder="🔍 Aufgaben durchsuchen..."
+                oninput="renderTasks()"
+            >
+        </div>
+
+        <div class="filter-buttons">
+            <button class="filter-btn active" onclick="filterTasks('all')">Alle</button>
+            <button class="filter-btn" onclick="filterTasks('active')">Aktiv</button>
+            <button class="filter-btn" onclick="filterTasks('completed')">Erledigt</button>
+        </div>
+
+        <div class="category-filter">
+            <button class="cat-btn active" onclick="filterByCategory('all')">Alle</button>
+            <button class="cat-btn" onclick="filterByCategory('persönlich')">👤</button>
+            <button class="cat-btn" onclick="filterByCategory('arbeit')">💼</button>
+            <button class="cat-btn" onclick="filterByCategory('einkaufen')">🛒</button>
+            <button class="cat-btn" onclick="filterByCategory('haushalt')">🏠</button>
+            <button class="cat-btn" onclick="filterByCategory('gesundheit')">💪</button>
+        </div>
+
+        <div class="sort-buttons">
+            <button class="sort-btn" onclick="sortTasks('date')">📅 Datum</button>
+            <button class="sort-btn" onclick="sortTasks('priority')">⚡ Priorität</button>
+            <button class="sort-btn" onclick="sortTasks('category')">📁 Kategorie</button>
+        </div>
+
+        <ul class="task-list" id="taskList">
+            <div class="loading">Lade Aufgaben</div>
+        </ul>
+
+        <div class="stats">
+            <div class="stat-item">
+                <div class="stat-number" id="totalTasks">0</div>
+                <div class="stat-label">Gesamt</div>
+            </div>
+            <div class="stat-item">
+                <div class="stat-number" id="activeTasks">0</div>
+                <div class="stat-label">Aktiv</div>
+            </div>
+            <div class="stat-item">
+                <div class="stat-number" id="completedTasks">0</div>
+                <div class="stat-label">Erledigt</div>
+            </div>
+        </div>
+    </div>
+
+    <script type="module">
+        import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
+        
+        let supabase = null;
+        let tasks = [];
+        let currentFilter = 'all';
+        let currentCategory = 'all';
+
+        // Make functions globally accessible
+        window.addTask = addTask;
+        window.toggleTask = toggleTask;
+        window.deleteTask = deleteTask;
+        window.filterTasks = filterTasks;
+        window.filterByCategory = filterByCategory;
+        window.sortTasks = sortTasks;
+        window.renderTasks = renderTasks;
+        window.saveSupabaseConfig = saveSupabaseConfig;
+        window.resetConfig = resetConfig;
+
+        // Initialize on page load
+        window.onload = function() {
+            checkSupabaseConfig();
+            
+            // Set minimum date to today
+            const today = new Date().toISOString().split('T')[0];
+            document.getElementById('dueDateInput').min = today;
+        };
+
+        function checkSupabaseConfig() {
+            const config = localStorage.getItem('supabaseConfig');
+            if (config) {
+                const { url, key } = JSON.parse(config);
+                initSupabase(url, key);
+            } else {
+                document.getElementById('setupNotice').classList.add('show');
+                document.getElementById('addBtn').disabled = true;
+            }
+        }
+
+        function saveSupabaseConfig() {
+            const url = document.getElementById('supabaseUrl').value.trim();
+            const key = document.getElementById('supabaseKey').value.trim();
+
+            if (!url || !key) {
+                alert('Bitte fülle beide Felder aus!');
+                return;
+            }
+
+            localStorage.setItem('supabaseConfig', JSON.stringify({ url, key }));
+            document.getElementById('setupNotice').classList.remove('show');
+            initSupabase(url, key);
+        }
+
+        function resetConfig() {
+            if (confirm('Möchtest du die Verbindung wirklich zurücksetzen?')) {
+                localStorage.removeItem('supabaseConfig');
+                location.reload();
+            }
+        }
+
+        function initSupabase(url, key) {
+            try {
+                supabase = createClient(url, key);
+                showStatus('connected', '✅ Mit Cloud verbunden');
+                document.getElementById('addBtn').disabled = false;
+                loadTasks();
+                setupRealtimeSubscription();
+            } catch (error) {
+                showStatus('error', '❌ Verbindungsfehler: ' + error.message);
+                console.error('Init error:', error);
+            }
+        }
+
+        function showStatus(type, message) {
+            const status = document.getElementById('syncStatus');
+            status.style.display = 'block';
+            status.className = 'sync-status ' + type;
+            status.textContent = message;
+            
+            if (type === 'syncing' || type === 'connected') {
+                setTimeout(() => {
+                    status.style.display = 'none';
+                }, 3000);
+            }
+        }
+
+        async function loadTasks() {
+            try {
+                showStatus('syncing', '🔄 Lade Aufgaben...');
+                const { data, error } = await supabase
+                    .from('tasks')
+                    .select('*')
+                    .order('created_at', { ascending: false });
+
+                if (error) throw error;
+
+                tasks = data || [];
+                renderTasks();
+                showStatus('connected', '✅ Aufgaben geladen');
+            } catch (error) {
+                showStatus('error', '❌ Fehler beim Laden: ' + error.message);
+                console.error('Load error:', error);
+            }
+        }
+
+        function setupRealtimeSubscription() {
+            supabase
+                .channel('tasks_changes')
+                .on('postgres_changes', 
+                    { event: '*', schema: 'public', table: 'tasks' }, 
+                    (payload) => {
+                        console.log('Change received!', payload);
+                        loadTasks();
+                    }
+                )
+                .subscribe();
+        }
+
+        async function addTask() {
+            const input = document.getElementById('taskInput');
+            const taskText = input.value.trim();
+            const category = document.getElementById('categorySelect').value;
+            const priority = document.getElementById('prioritySelect').value;
+            const dueDate = document.getElementById('dueDateInput').value;
+
+            if (taskText === '') {
+                alert('Bitte gib eine Aufgabe ein!');
+                return;
+            }
+
+            try {
+                showStatus('syncing', '🔄 Speichere...');
+                const { data, error } = await supabase
+                    .from('tasks')
+                    .insert([
+                        {
+                            text: taskText,
+                            category: category,
+                            priority: priority,
+                            due_date: dueDate || null,
+                            completed: false
+                        }
+                    ])
+                    .select();
+
+                if (error) throw error;
+
+                input.value = '';
+                document.getElementById('dueDateInput').value = '';
+                showStatus('connected', '✅ Gespeichert');
+            } catch (error) {
+                showStatus('error', '❌ Fehler: ' + error.message);
+                console.error('Add error:', error);
+            }
+        }
+
+        async function toggleTask(id) {
+            const task = tasks.find(t => t.id === id);
+            if (!task) return;
+
+            try {
+                const { error } = await supabase
+                    .from('tasks')
+                    .update({ completed: !task.completed })
+                    .eq('id', id);
+
+                if (error) throw error;
+            } catch (error) {
+                showStatus('error', '❌ Fehler: ' + error.message);
+                console.error('Toggle error:', error);
+            }
+        }
+
+        async function deleteTask(id) {
+            if (!confirm('Möchtest du diese Aufgabe wirklich löschen?')) return;
+
+            try {
+                showStatus('syncing', '🔄 Lösche...');
+                const { error } = await supabase
+                    .from('tasks')
+                    .delete()
+                    .eq('id', id);
+
+                if (error) throw error;
+                showStatus('connected', '✅ Gelöscht');
+            } catch (error) {
+                showStatus('error', '❌ Fehler: ' + error.message);
+                console.error('Delete error:', error);
+            }
+        }
+
+        function filterTasks(filter) {
+            currentFilter = filter;
+            document.querySelectorAll('.filter-btn').forEach(btn => {
+                btn.classList.remove('active');
+            });
+            event.target.classList.add('active');
+            renderTasks();
+        }
+
+        function filterByCategory(category) {
+            currentCategory = category;
+            document.querySelectorAll('.cat-btn').forEach(btn => {
+                btn.classList.remove('active');
+            });
+            event.target.classList.add('active');
+            renderTasks();
+        }
+
+        function sortTasks(sortBy) {
+            switch(sortBy) {
+                case 'date':
+                    tasks.sort((a, b) => {
+                        if (!a.due_date && !b.due_date) return 0;
+                        if (!a.due_date) return 1;
+                        if (!b.due_date) return -1;
+                        return new Date(a.due_date) - new Date(b.due_date);
+                    });
+                    break;
+                case 'priority':
+                    const priorityOrder = { 'hoch': 0, 'mittel': 1, 'niedrig': 2 };
+                    tasks.sort((a, b) => priorityOrder[a.priority] - priorityOrder[b.priority]);
+                    break;
+                case 'category':
+                    tasks.sort((a, b) => a.category.localeCompare(b.category));
+                    break;
+            }
+            renderTasks();
+        }
+
+        function getCategoryIcon(category) {
+            const icons = {
+                'persönlich': '👤',
+                'arbeit': '💼',
+                'einkaufen': '🛒',
+                'haushalt': '🏠',
+                'gesundheit': '💪',
+                'sonstiges': '📌'
+            };
+            return icons[category] || '📌';
+        }
+
+        function getPriorityIcon(priority) {
+            const icons = {
+                'hoch': '🔴',
+                'mittel': '🟡',
+                'niedrig': '🟢'
+            };
+            return icons[priority] || '🟡';
+        }
+
+        function formatDate(dateString) {
+            if (!dateString) return null;
+            const date = new Date(dateString);
+            const today = new Date();
+            const tomorrow = new Date(today);
+            tomorrow.setDate(tomorrow.getDate() + 1);
+            
+            today.setHours(0, 0, 0, 0);
+            tomorrow.setHours(0, 0, 0, 0);
+            date.setHours(0, 0, 0, 0);
+            
+            if (date.getTime() === today.getTime()) return 'Heute';
+            if (date.getTime() === tomorrow.getTime()) return 'Morgen';
+            
+            return date.toLocaleDateString('de-DE', { day: '2-digit', month: '2-digit', year: 'numeric' });
+        }
+
+        function getDueDateClass(dateString) {
+            if (!dateString) return '';
+            const date = new Date(dateString);
+            const today = new Date();
+            const threeDays = new Date(today);
+            threeDays.setDate(threeDays.getDate() + 3);
+            
+            today.setHours(0, 0, 0, 0);
+            threeDays.setHours(0, 0, 0, 0);
+            date.setHours(0, 0, 0, 0);
+            
+            if (date < today) return 'overdue';
+            if (date <= threeDays) return 'due-soon';
+            return '';
+        }
+
+        function renderTasks() {
+            const taskList = document.getElementById('taskList');
+            const searchTerm = document.getElementById('searchInput').value.toLowerCase();
+            
+            let filteredTasks = [...tasks];
+            
+            if (currentFilter === 'active') {
+                filteredTasks = filteredTasks.filter(t => !t.completed);
+            } else if (currentFilter === 'completed') {
+                filteredTasks = filteredTasks.filter(t => t.completed);
+            }
+            
+            if (currentCategory !== 'all') {
+                filteredTasks = filteredTasks.filter(t => t.category === currentCategory);
+            }
+            
+            if (searchTerm) {
+                filteredTasks = filteredTasks.filter(t => 
+                    t.text.toLowerCase().includes(searchTerm) ||
+                    t.category.toLowerCase().includes(searchTerm)
+                );
+            }
+
+            if (filteredTasks.length === 0) {
+                taskList.innerHTML = `
+                    <div class="empty-state">
+                        <svg viewBox="0 0 24 24" fill="currentColor">
+                            <path d="M9 2C8.44772 2 8 2.44772 8 3C8 3.55228 8.44772 4 9 4H15C15.5523 4 16 3.55228 16 3C16 2.44772 15.5523 2 15 2H9Z"/>
+                            <path d="M4 5C4 4.44772 4.44772 4 5 4H19C19.5523 4 20 4.44772 20 5V20C20 20.5523 19.5523 21 19 21H5C4.44772 21 4 20.5523 4 20V5Z"/>
+                        </svg>
+                        <p>${searchTerm ? 'Keine Aufgaben gefunden' : 
+                             currentFilter === 'all' ? 'Noch keine Aufgaben vorhanden' : 
+                             currentFilter === 'active' ? 'Keine aktiven Aufgaben' : 
+                             'Keine erledigten Aufgaben'}</p>
+                    </div>
+                `;
+            } else {
+                taskList.innerHTML = filteredTasks.map(task => {
+                    const formattedDate = formatDate(task.due_date);
+                    const dueDateClass = getDueDateClass(task.due_date);
+                    
+                    return `
+                    <li class="task-item ${task.completed ? 'completed' : ''} priority-${task.priority}">
+                        <div class="task-main">
+                            <div class="checkbox ${task.completed ? 'checked' : ''}" onclick="toggleTask(${task.id})"></div>
+                            <span class="task-text">${escapeHtml(task.text)}</span>
+                            <button class="delete-btn" onclick="deleteTask(${task.id})">🗑️</button>
+                        </div>
+                        <div class="task-meta">
+                            <span class="task-badge">${getCategoryIcon(task.category)} ${task.category}</span>
+                            <span class="task-badge">${getPriorityIcon(task.priority)} ${task.priority}</span>
+                            ${formattedDate ? `<span class="task-badge ${dueDateClass}">📅 ${formattedDate}</span>` : ''}
+                        </div>
+                    </li>
+                    `;
+                }).join('');
+            }
+
+            updateStats();
+        }
+
+        function updateStats() {
+            const total = tasks.length;
+            const active = tasks.filter(t => !t.completed).length;
+            const completed = tasks.filter(t => t.completed).length;
+
+            document.getElementById('totalTasks').textContent = total;
+            document.getElementById('activeTasks').textContent = active;
+            document.getElementById('completedTasks').textContent = completed;
+        }
+
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+    </script>
+</body>
+</html>
