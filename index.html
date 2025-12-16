@@ -44,42 +44,148 @@
             font-size: 2em;
         }
 
-        .setup-notice {
-            background: #fff3cd;
-            border: 2px solid #ffc107;
-            border-radius: 10px;
-            padding: 20px;
-            margin-bottom: 20px;
+        /* Auth Screens */
+        .auth-screen {
             display: none;
         }
 
-        .setup-notice.show {
+        .auth-screen.active {
             display: block;
         }
 
-        .setup-notice h3 {
-            color: #856404;
-            margin-bottom: 10px;
+        .auth-form {
+            max-width: 400px;
+            margin: 0 auto;
         }
 
-        .setup-notice p {
-            color: #856404;
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            color: #333;
+            font-weight: 600;
             font-size: 14px;
-            margin-bottom: 10px;
         }
 
-        .setup-notice input {
+        .form-group input {
             width: 100%;
-            padding: 10px;
-            margin-bottom: 10px;
-            border: 1px solid #ddd;
-            border-radius: 5px;
-            font-family: monospace;
-            font-size: 12px;
+            padding: 12px 15px;
+            border: 2px solid #e0e0e0;
+            border-radius: 10px;
+            font-size: 16px;
+            transition: all 0.3s ease;
         }
 
-        .setup-notice button {
+        .form-group input:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+
+        .auth-btn {
             width: 100%;
+            padding: 15px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 10px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: transform 0.2s ease;
+            margin-bottom: 15px;
+        }
+
+        .auth-btn:hover {
+            transform: translateY(-2px);
+        }
+
+        .auth-btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .auth-link {
+            text-align: center;
+            margin-top: 20px;
+            color: #666;
+            font-size: 14px;
+        }
+
+        .auth-link a {
+            color: #667eea;
+            text-decoration: none;
+            font-weight: 600;
+        }
+
+        .auth-link a:hover {
+            text-decoration: underline;
+        }
+
+        .error-message {
+            background: #fee;
+            border: 1px solid #fcc;
+            color: #c33;
+            padding: 12px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            font-size: 14px;
+        }
+
+        .success-message {
+            background: #efe;
+            border: 1px solid #cfc;
+            color: #3c3;
+            padding: 12px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            font-size: 14px;
+        }
+
+        /* User Info */
+        .user-info {
+            display: none;
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .user-info.show {
+            display: flex;
+        }
+
+        .user-email {
+            color: #666;
+            font-size: 14px;
+        }
+
+        .logout-btn {
+            padding: 8px 16px;
+            background: #ff6b6b;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 13px;
+        }
+
+        .logout-btn:hover {
+            background: #ff5252;
+        }
+
+        /* App Content */
+        .app-content {
+            display: none;
+        }
+
+        .app-content.active {
+            display: block;
         }
 
         .sync-status {
@@ -577,116 +683,158 @@
 </head>
 <body>
     <div class="container">
-        <h1>📝 Aufgaben Manager</h1>
+        <!-- Login Screen -->
+        <div id="loginScreen" class="auth-screen active">
+            <h1>🔐 Login</h1>
+            <div class="auth-form">
+                <div id="loginError" style="display: none;" class="error-message"></div>
+                
+                <form id="loginForm" onsubmit="handleLogin(event)">
+                    <div class="form-group">
+                        <label for="loginEmail">E-Mail</label>
+                        <input type="email" id="loginEmail" required placeholder="deine@email.de">
+                    </div>
+                    <div class="form-group">
+                        <label for="loginPassword">Passwort</label>
+                        <input type="password" id="loginPassword" required placeholder="Mindestens 6 Zeichen">
+                    </div>
+                    <button type="submit" class="auth-btn" id="loginBtn">Anmelden</button>
+                </form>
 
-        <!-- Setup Notice -->
-        <div class="setup-notice" id="setupNotice">
-            <h3>⚙️ Supabase Setup erforderlich</h3>
-            <p>Bitte gib deine Supabase Projekt-Daten ein:</p>
-            <input type="text" id="supabaseUrl" placeholder="Supabase Project URL (https://xxx.supabase.co)">
-            <input type="text" id="supabaseKey" placeholder="Supabase Anon/Public Key">
-            <button onclick="saveSupabaseConfig()">Verbinden</button>
-            <p style="margin-top: 15px; font-size: 12px;">
-                Diese Daten findest du in deinem Supabase Projekt unter:<br>
-                <strong>Settings → API → Project URL & anon/public key</strong>
-            </p>
-        </div>
-
-        <!-- Sync Status -->
-        <div class="sync-status" id="syncStatus" style="display: none;"></div>
-        
-        <!-- Reset Button -->
-        <div style="text-align: center; margin-bottom: 15px;">
-            <button onclick="resetConfig()" style="background: #ff6b6b; padding: 8px 16px; font-size: 13px;">
-                🔄 Verbindung zurücksetzen
-            </button>
-        </div>
-        
-        <div class="input-container">
-            <input 
-                type="text" 
-                id="taskInput" 
-                placeholder="Neue Aufgabe eingeben..."
-                onkeypress="if(event.key === 'Enter') addTask()"
-            >
-        </div>
-
-        <div class="task-options">
-            <div class="option-group">
-                <label>Kategorie</label>
-                <select id="categorySelect">
-                    <option value="persönlich">👤 Persönlich</option>
-                    <option value="arbeit">💼 Arbeit</option>
-                    <option value="einkaufen">🛒 Einkaufen</option>
-                    <option value="haushalt">🏠 Haushalt</option>
-                    <option value="gesundheit">💪 Gesundheit</option>
-                    <option value="sonstiges">📌 Sonstiges</option>
-                </select>
-            </div>
-
-            <div class="option-group">
-                <label>Priorität</label>
-                <select id="prioritySelect">
-                    <option value="niedrig">🟢 Niedrig</option>
-                    <option value="mittel" selected>🟡 Mittel</option>
-                    <option value="hoch">🔴 Hoch</option>
-                </select>
-            </div>
-
-            <div class="option-group">
-                <label>Fällig am</label>
-                <input type="date" id="dueDateInput">
+                <div class="auth-link">
+                    Noch kein Account? <a href="#" onclick="showSignup()">Jetzt registrieren</a>
+                </div>
             </div>
         </div>
 
-        <button class="add-btn" id="addBtn" onclick="addTask()">➕ Aufgabe hinzufügen</button>
+        <!-- Signup Screen -->
+        <div id="signupScreen" class="auth-screen">
+            <h1>📝 Registrieren</h1>
+            <div class="auth-form">
+                <div id="signupError" style="display: none;" class="error-message"></div>
+                <div id="signupSuccess" style="display: none;" class="success-message"></div>
+                
+                <form id="signupForm" onsubmit="handleSignup(event)">
+                    <div class="form-group">
+                        <label for="signupEmail">E-Mail</label>
+                        <input type="email" id="signupEmail" required placeholder="deine@email.de">
+                    </div>
+                    <div class="form-group">
+                        <label for="signupPassword">Passwort</label>
+                        <input type="password" id="signupPassword" required placeholder="Mindestens 6 Zeichen">
+                    </div>
+                    <div class="form-group">
+                        <label for="signupPasswordConfirm">Passwort bestätigen</label>
+                        <input type="password" id="signupPasswordConfirm" required placeholder="Passwort wiederholen">
+                    </div>
+                    <button type="submit" class="auth-btn" id="signupBtn">Account erstellen</button>
+                </form>
 
-        <div class="search-container">
-            <input 
-                type="text" 
-                id="searchInput" 
-                placeholder="🔍 Aufgaben durchsuchen..."
-                oninput="renderTasks()"
-            >
-        </div>
-
-        <div class="filter-buttons">
-            <button class="filter-btn active" onclick="filterTasks('all')">Alle</button>
-            <button class="filter-btn" onclick="filterTasks('active')">Aktiv</button>
-            <button class="filter-btn" onclick="filterTasks('completed')">Erledigt</button>
-        </div>
-
-        <div class="category-filter">
-            <button class="cat-btn active" onclick="filterByCategory('all')">Alle</button>
-            <button class="cat-btn" onclick="filterByCategory('persönlich')">👤</button>
-            <button class="cat-btn" onclick="filterByCategory('arbeit')">💼</button>
-            <button class="cat-btn" onclick="filterByCategory('einkaufen')">🛒</button>
-            <button class="cat-btn" onclick="filterByCategory('haushalt')">🏠</button>
-            <button class="cat-btn" onclick="filterByCategory('gesundheit')">💪</button>
-        </div>
-
-        <div class="sort-buttons">
-            <button class="sort-btn" onclick="sortTasks('date')">📅 Datum</button>
-            <button class="sort-btn" onclick="sortTasks('priority')">⚡ Priorität</button>
-            <button class="sort-btn" onclick="sortTasks('category')">📁 Kategorie</button>
-        </div>
-
-        <ul class="task-list" id="taskList">
-            <div class="loading">Lade Aufgaben</div>
-        </ul>
-
-        <div class="stats">
-            <div class="stat-item">
-                <div class="stat-number" id="totalTasks">0</div>
-                <div class="stat-label">Gesamt</div>
+                <div class="auth-link">
+                    Schon registriert? <a href="#" onclick="showLogin()">Zum Login</a>
+                </div>
             </div>
-            <div class="stat-item">
-                <div class="stat-number" id="activeTasks">0</div>
-                <div class="stat-label">Aktiv</div>
+        </div>
+
+        <!-- App Content -->
+        <div id="appContent" class="app-content">
+            <h1>📝 Aufgaben Manager</h1>
+
+            <!-- User Info -->
+            <div class="user-info" id="userInfo">
+                <span class="user-email" id="userEmail"></span>
+                <button class="logout-btn" onclick="handleLogout()">Abmelden</button>
             </div>
-            <div class="stat-item">
-                <div class="stat-number" id="completedTasks">0</div>
-                <div class="stat-label">Erledigt</div>
+
+            <!-- Sync Status -->
+            <div class="sync-status" id="syncStatus" style="display: none;"></div>
+            
+            <div class="input-container">
+                <input 
+                    type="text" 
+                    id="taskInput" 
+                    placeholder="Neue Aufgabe eingeben..."
+                    onkeypress="if(event.key === 'Enter') addTask()"
+                >
+            </div>
+
+            <div class="task-options">
+                <div class="option-group">
+                    <label>Kategorie</label>
+                    <select id="categorySelect">
+                        <option value="persönlich">👤 Persönlich</option>
+                        <option value="arbeit">💼 Arbeit</option>
+                        <option value="einkaufen">🛒 Einkaufen</option>
+                        <option value="haushalt">🏠 Haushalt</option>
+                        <option value="gesundheit">💪 Gesundheit</option>
+                        <option value="sonstiges">📌 Sonstiges</option>
+                    </select>
+                </div>
+
+                <div class="option-group">
+                    <label>Priorität</label>
+                    <select id="prioritySelect">
+                        <option value="niedrig">🟢 Niedrig</option>
+                        <option value="mittel" selected>🟡 Mittel</option>
+                        <option value="hoch">🔴 Hoch</option>
+                    </select>
+                </div>
+
+                <div class="option-group">
+                    <label>Fällig am</label>
+                    <input type="date" id="dueDateInput">
+                </div>
+            </div>
+
+            <button class="add-btn" id="addBtn" onclick="addTask()">➕ Aufgabe hinzufügen</button>
+
+            <div class="search-container">
+                <input 
+                    type="text" 
+                    id="searchInput" 
+                    placeholder="🔍 Aufgaben durchsuchen..."
+                    oninput="renderTasks()"
+                >
+            </div>
+
+            <div class="filter-buttons">
+                <button class="filter-btn active" onclick="filterTasks('all')">Alle</button>
+                <button class="filter-btn" onclick="filterTasks('active')">Aktiv</button>
+                <button class="filter-btn" onclick="filterTasks('completed')">Erledigt</button>
+            </div>
+
+            <div class="category-filter">
+                <button class="cat-btn active" onclick="filterByCategory('all')">Alle</button>
+                <button class="cat-btn" onclick="filterByCategory('persönlich')">👤</button>
+                <button class="cat-btn" onclick="filterByCategory('arbeit')">💼</button>
+                <button class="cat-btn" onclick="filterByCategory('einkaufen')">🛒</button>
+                <button class="cat-btn" onclick="filterByCategory('haushalt')">🏠</button>
+                <button class="cat-btn" onclick="filterByCategory('gesundheit')">💪</button>
+            </div>
+
+            <div class="sort-buttons">
+                <button class="sort-btn" onclick="sortTasks('date')">📅 Datum</button>
+                <button class="sort-btn" onclick="sortTasks('priority')">⚡ Priorität</button>
+                <button class="sort-btn" onclick="sortTasks('category')">📁 Kategorie</button>
+            </div>
+
+            <ul class="task-list" id="taskList">
+                <div class="loading">Lade Aufgaben</div>
+            </ul>
+
+            <div class="stats">
+                <div class="stat-item">
+                    <div class="stat-number" id="totalTasks">0</div>
+                    <div class="stat-label">Gesamt</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-number" id="activeTasks">0</div>
+                    <div class="stat-label">Aktiv</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-number" id="completedTasks">0</div>
+                    <div class="stat-label">Erledigt</div>
+                </div>
             </div>
         </div>
     </div>
@@ -694,10 +842,16 @@
     <script type="module">
         import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
         
-        let supabase = null;
+        // Supabase Configuration
+        const SUPABASE_URL = 'https://jpwtynswjxsquypqfakw.supabase.co';
+        const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Impwd3R5bnN3anhzcXV5cHFmYWt3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjU3NDI1MTUsImV4cCI6MjA4MTMxODUxNX0.ldCOGW6p3NPsX31Lqn41pPh3boNV2TwNUOffWEA-LgM';
+        
+        const supabase = createClient(SUPABASE_URL, SUPABASE_KEY);
+        
         let tasks = [];
         let currentFilter = 'all';
         let currentCategory = 'all';
+        let currentUser = null;
 
         // Make functions globally accessible
         window.addTask = addTask;
@@ -707,64 +861,167 @@
         window.filterByCategory = filterByCategory;
         window.sortTasks = sortTasks;
         window.renderTasks = renderTasks;
-        window.saveSupabaseConfig = saveSupabaseConfig;
-        window.resetConfig = resetConfig;
+        window.handleLogin = handleLogin;
+        window.handleSignup = handleSignup;
+        window.handleLogout = handleLogout;
+        window.showLogin = showLogin;
+        window.showSignup = showSignup;
 
         // Initialize on page load
-        window.onload = function() {
-            checkSupabaseConfig();
-            
-            // Set minimum date to today
+        window.onload = async function() {
             const today = new Date().toISOString().split('T')[0];
             document.getElementById('dueDateInput').min = today;
+            
+            // Check if user is already logged in
+            const { data: { session } } = await supabase.auth.getSession();
+            if (session) {
+                currentUser = session.user;
+                showApp();
+                loadTasks();
+                setupRealtimeSubscription();
+            }
         };
 
-function checkSupabaseConfig() {
-    // DEINE SUPABASE DATEN HIER EINTRAGEN:
-    const SUPABASE_URL = 'https://jpwtynswjxsquypqfakw.supabase.co';  // ← HIER DEINE URL
-    const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Impwd3R5bnN3anhzcXV5cHFmYWt3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjU3NDI1MTUsImV4cCI6MjA4MTMxODUxNX0.ldCOGW6p3NPsX31Lqn41pPh3boNV2TwNUOffWEA-LgM';          // ← HIER DEIN KEY
-    
-    // Automatische Verbindung
-    initSupabase(SUPABASE_URL, SUPABASE_KEY);
-    
-    // Setup-Fenster ausblenden
-    document.getElementById('setupNotice').style.display = 'none';
-}
-
-        function saveSupabaseConfig() {
-            const url = document.getElementById('supabaseUrl').value.trim();
-            const key = document.getElementById('supabaseKey').value.trim();
-
-            if (!url || !key) {
-                alert('Bitte fülle beide Felder aus!');
-                return;
-            }
-
-            localStorage.setItem('supabaseConfig', JSON.stringify({ url, key }));
-            document.getElementById('setupNotice').classList.remove('show');
-            initSupabase(url, key);
+        // Auth Functions
+        function showLogin() {
+            document.getElementById('signupScreen').classList.remove('active');
+            document.getElementById('loginScreen').classList.add('active');
+            clearErrors();
         }
 
-        function resetConfig() {
-            if (confirm('Möchtest du die Verbindung wirklich zurücksetzen?')) {
-                localStorage.removeItem('supabaseConfig');
-                location.reload();
-            }
+        function showSignup() {
+            document.getElementById('loginScreen').classList.remove('active');
+            document.getElementById('signupScreen').classList.add('active');
+            clearErrors();
         }
 
-        function initSupabase(url, key) {
+        function showApp() {
+            document.getElementById('loginScreen').classList.remove('active');
+            document.getElementById('signupScreen').classList.remove('active');
+            document.getElementById('appContent').classList.add('active');
+            document.getElementById('userInfo').classList.add('show');
+            document.getElementById('userEmail').textContent = currentUser.email;
+        }
+
+        function clearErrors() {
+            document.getElementById('loginError').style.display = 'none';
+            document.getElementById('signupError').style.display = 'none';
+            document.getElementById('signupSuccess').style.display = 'none';
+        }
+
+        async function handleLogin(event) {
+            event.preventDefault();
+            const email = document.getElementById('loginEmail').value;
+            const password = document.getElementById('loginPassword').value;
+            const btn = document.getElementById('loginBtn');
+            
+            btn.disabled = true;
+            btn.textContent = 'Anmelden...';
+            clearErrors();
+
             try {
-                supabase = createClient(url, key);
-                showStatus('connected', '✅ Mit Cloud verbunden');
-                document.getElementById('addBtn').disabled = false;
+                const { data, error } = await supabase.auth.signInWithPassword({
+                    email: email,
+                    password: password
+                });
+
+                if (error) throw error;
+
+                currentUser = data.user;
+                showApp();
                 loadTasks();
                 setupRealtimeSubscription();
             } catch (error) {
-                showStatus('error', '❌ Verbindungsfehler: ' + error.message);
-                console.error('Init error:', error);
+                const errorEl = document.getElementById('loginError');
+                errorEl.textContent = getErrorMessage(error.message);
+                errorEl.style.display = 'block';
+            } finally {
+                btn.disabled = false;
+                btn.textContent = 'Anmelden';
             }
         }
 
+        async function handleSignup(event) {
+            event.preventDefault();
+            const email = document.getElementById('signupEmail').value;
+            const password = document.getElementById('signupPassword').value;
+            const passwordConfirm = document.getElementById('signupPasswordConfirm').value;
+            const btn = document.getElementById('signupBtn');
+            
+            clearErrors();
+
+            if (password !== passwordConfirm) {
+                const errorEl = document.getElementById('signupError');
+                errorEl.textContent = 'Passwörter stimmen nicht überein!';
+                errorEl.style.display = 'block';
+                return;
+            }
+
+            if (password.length < 6) {
+                const errorEl = document.getElementById('signupError');
+                errorEl.textContent = 'Passwort muss mindestens 6 Zeichen lang sein!';
+                errorEl.style.display = 'block';
+                return;
+            }
+
+            btn.disabled = true;
+            btn.textContent = 'Registrieren...';
+
+            try {
+                const { data, error } = await supabase.auth.signUp({
+                    email: email,
+                    password: password
+                });
+
+                if (error) throw error;
+
+                const successEl = document.getElementById('signupSuccess');
+                successEl.textContent = 'Account erfolgreich erstellt! Bitte bestätige deine E-Mail und melde dich dann an.';
+                successEl.style.display = 'block';
+                
+                // Clear form
+                document.getElementById('signupForm').reset();
+                
+                // Switch to login after 3 seconds
+                setTimeout(() => {
+                    showLogin();
+                }, 3000);
+            } catch (error) {
+                const errorEl = document.getElementById('signupError');
+                errorEl.textContent = getErrorMessage(error.message);
+                errorEl.style.display = 'block';
+            } finally {
+                btn.disabled = false;
+                btn.textContent = 'Account erstellen';
+            }
+        }
+
+        async function handleLogout() {
+            if (!confirm('Möchtest du dich wirklich abmelden?')) return;
+
+            await supabase.auth.signOut();
+            currentUser = null;
+            tasks = [];
+            
+            document.getElementById('appContent').classList.remove('active');
+            document.getElementById('userInfo').classList.remove('show');
+            showLogin();
+        }
+
+        function getErrorMessage(error) {
+            if (error.includes('Invalid login credentials')) {
+                return 'Ungültige E-Mail oder Passwort!';
+            }
+            if (error.includes('Email not confirmed')) {
+                return 'Bitte bestätige zuerst deine E-Mail!';
+            }
+            if (error.includes('User already registered')) {
+                return 'Diese E-Mail ist bereits registriert!';
+            }
+            return 'Ein Fehler ist aufgetreten: ' + error;
+        }
+
+        // Task Functions
         function showStatus(type, message) {
             const status = document.getElementById('syncStatus');
             status.style.display = 'block';
@@ -784,6 +1041,7 @@ function checkSupabaseConfig() {
                 const { data, error } = await supabase
                     .from('tasks')
                     .select('*')
+                    .eq('user_id', currentUser.id)
                     .order('created_at', { ascending: false });
 
                 if (error) throw error;
@@ -801,7 +1059,12 @@ function checkSupabaseConfig() {
             supabase
                 .channel('tasks_changes')
                 .on('postgres_changes', 
-                    { event: '*', schema: 'public', table: 'tasks' }, 
+                    { 
+                        event: '*', 
+                        schema: 'public', 
+                        table: 'tasks',
+                        filter: `user_id=eq.${currentUser.id}`
+                    }, 
                     (payload) => {
                         console.log('Change received!', payload);
                         loadTasks();
@@ -832,7 +1095,8 @@ function checkSupabaseConfig() {
                             category: category,
                             priority: priority,
                             due_date: dueDate || null,
-                            completed: false
+                            completed: false,
+                            user_id: currentUser.id
                         }
                     ])
                     .select();
@@ -856,7 +1120,8 @@ function checkSupabaseConfig() {
                 const { error } = await supabase
                     .from('tasks')
                     .update({ completed: !task.completed })
-                    .eq('id', id);
+                    .eq('id', id)
+                    .eq('user_id', currentUser.id);
 
                 if (error) throw error;
             } catch (error) {
@@ -873,7 +1138,8 @@ function checkSupabaseConfig() {
                 const { error } = await supabase
                     .from('tasks')
                     .delete()
-                    .eq('id', id);
+                    .eq('id', id)
+                    .eq('user_id', currentUser.id);
 
                 if (error) throw error;
                 showStatus('connected', '✅ Gelöscht');
